@@ -3,6 +3,7 @@ import re
 from BeautifulSoup import BeautifulSoup
 from RequestBase import RequestBase
 import re
+from utils import *
 
 class UrlFactory(RequestBase):
     def __init__(self, url_arr, coding):
@@ -40,24 +41,30 @@ class UrlFactory(RequestBase):
             self.url_array[i]=sstr
         return self.url_array, self.url_reviews
 
-def htmlpage_has_products(url, coding):
+def extract_htmlpage_products(url, coding):
 	request = urllib2.Request(url)
 	try:
-		response = urllib2.urlopen(req, timeout=15)
+		response = urllib2.urlopen(request, timeout=15)
 	except urllib2.URLError:
 		html = "<a></a>"
 		soup = BeautifulSoup(''.join(html), fromEncoding=coding)
 		return soup
 	html = response.read()
 	response.close()
-	soup = BeautifulSoup(''.join(html), fromEncoding=coding)
-	
-
-def main():
-	base_url = "http://www.360buy.com/products/"
+	block_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
+	block = block_soup.findAll(attrs={'id':re.compile("^tab-sort")})
+	title_soup = BeautifulSoup(''.join(str(block)), fromEncoding=coding)
+	title = title_soup.findAll("li")
+	products_catalog = []
+	for s in title:
+		sstr = extract_text_from_htmlline(str(s))
+		sstr = sstr.strip()
+		products_catalog.append(sstr)
+	return products_catalog
 
 if __name__ == '__main__':
-    url_arr=['http://www.360buy.com/products/670-677-678-0-0-0-0-0-0-0-1-1-1.html',
-             'http://www.360buy.com/products/670-677-678-0-0-0-0-0-0-0-1-1-2.html']
-    ul=UrlFactory(url_arr, 'utf8')
-    url_array, url_reviews=ul.url_storage()
+	url_arr=["http://www.360buy.com/allSort.aspx"]
+	products_catalog = extract_htmlpage_products(url_arr[0], 'gbk')
+	for p in products_catalog:
+		print p
+
