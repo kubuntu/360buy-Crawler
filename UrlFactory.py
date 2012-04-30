@@ -3,7 +3,7 @@ import re
 from BeautifulSoup import BeautifulSoup
 from RequestBase import RequestBase
 import re
-from utils import *
+from Utils import *
 
 class UrlFactory(RequestBase):
     def __init__(self, url_arr, coding):
@@ -51,20 +51,18 @@ def extract_htmlpage_products(url, coding):
 		return soup
 	html = response.read()
 	response.close()
-	block_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
-	block = block_soup.findAll(attrs={'id':re.compile("^tab-sort")})
-	title_soup = BeautifulSoup(''.join(str(block)), fromEncoding=coding)
-	title = title_soup.findAll("li")
-	products_catalog = []
-	for s in title:
-		sstr = extract_text_from_htmlline(str(s))
-		sstr = sstr.strip()
-		products_catalog.append(sstr)
-	return products_catalog
+	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
+	blocks = htmlpage_soup.findAll("div", attrs={"class":"mt"})
+	products_catalog_href = []
+	for block in blocks:
+		catalog = extract_text_from_htmlline(str(block)).strip()
+		href = extract_href_from_htmlline(str(block)).strip()
+		products_catalog_href.append((catalog, href));
+	return products_catalog_href
 
 if __name__ == '__main__':
 	url_arr=["http://www.360buy.com/allSort.aspx"]
-	products_catalog = extract_htmlpage_products(url_arr[0], 'gbk')
-	for p in products_catalog:
-		print p
-
+	products_catalog_href = extract_htmlpage_products(url_arr[0], 'gbk')
+	for p in products_catalog_href:
+		print p[0]
+		print p[1]
