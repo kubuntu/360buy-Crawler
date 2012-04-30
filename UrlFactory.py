@@ -1,3 +1,5 @@
+import urllib2
+import re
 from BeautifulSoup import BeautifulSoup
 from RequestBase import RequestBase
 import re
@@ -38,8 +40,24 @@ class UrlFactory(RequestBase):
             self.url_array[i]=sstr
         return self.url_array, self.url_reviews
 
+def htmlpage_has_products(url, coding):
+	request = urllib2.Request(url)
+	try:
+		response = urllib2.urlopen(req, timeout=15)
+	except urllib2.URLError:
+		html = "<a></a>"
+		soup = BeautifulSoup(''.join(html), fromEncoding=coding)
+		return soup
+	html = response.read()
+	response.close()
+	soup = BeautifulSoup(''.join(html), fromEncoding=coding)
+	
+
+def main():
+	base_url = "http://www.360buy.com/products/"
+
 if __name__ == '__main__':
-    url_arr=['http://www.360buy.com/products/670-677-678.html',
+    url_arr=['http://www.360buy.com/products/670-677-678-0-0-0-0-0-0-0-1-1-1.html',
              'http://www.360buy.com/products/670-677-678-0-0-0-0-0-0-0-1-1-2.html']
     ul=UrlFactory(url_arr, 'utf8')
     url_array, url_reviews=ul.url_storage()
