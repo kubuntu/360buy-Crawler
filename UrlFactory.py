@@ -1,3 +1,5 @@
+#-*-coding:utf8-*-
+
 import urllib2
 import re
 from BeautifulSoup import BeautifulSoup
@@ -41,7 +43,7 @@ class UrlFactory(RequestBase):
             self.url_array[i]=sstr
         return self.url_array, self.url_reviews
 
-def extract_htmlpage_products(url, coding):
+def __htmlpage_soup(url, coding):
 	request = urllib2.Request(url)
 	try:
 		response = urllib2.urlopen(request, timeout=15)
@@ -51,18 +53,43 @@ def extract_htmlpage_products(url, coding):
 		return soup
 	html = response.read()
 	response.close()
-	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
+	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)	
+	return htmlpage_soup
+
+def extract_htmlpage_products(url, coding):
+	base_url1 = "http://www.360buy.com/"
+	base_url2 = "http://www.360buy.com"
+	htmlpage_soup = __htmlpage_soup(url, coding)
 	blocks = htmlpage_soup.findAll("div", attrs={"class":"mt"})
-	products_catalog_href = []
+	blocks_sub = htmlpage_soup.findAll("em")
+	products_top_catalog_href = [] #一级目录
+	products_sub_catalog_href = [] #二级目录
 	for block in blocks:
 		catalog = extract_text_from_htmlline(str(block)).strip()
 		href = extract_href_from_htmlline(str(block)).strip()
-		products_catalog_href.append((catalog, href));
-	return products_catalog_href
+		products_top_catalog_href.append((catalog, href))
+	for block_sub in blocks_sub:
+		parts = split_htmlline2parts(str(block_sub).strip(), "</em>")
+		for part in parts:
+			catalog_sub = extract_text_from_htmlline(str(part)).strip()
+			if len(catalog_sub) == 0:
+				continue
+			href_sub = extract_href_from_htmlline(str(part)).strip()
+			if href_sub.find("http://") == -1:
+				if href_sub[0] == '/':
+					href_sub = base_url2 + href_sub
+				else:
+					href_sub = base_url1 + href_sub
+			products_sub_catalog_href.append((catalog_sub, href_sub))
+	return products_top_catalog_href, products_sub_catalog_href
+
+def extract_products_pagenum(url, coding):
+	htmlpage_soup = __htmlpage_soup(url, coding)
+	block = htmlpage_soup.find("div", attrs={"class":"pagin fr"})
+	num = extract_maxnum_from_htmlline(str(block))
+	print num
+	
 
 if __name__ == '__main__':
-	url_arr=["http://www.360buy.com/allSort.aspx"]
-	products_catalog_href = extract_htmlpage_products(url_arr[0], 'gbk')
-	for p in products_catalog_href:
-		print p[0]
-		print p[1]
+	url_arr=["http://www.360buy.com/products/737-794-965.html"]
+	num = extract_products_pagenum(url_arr[0], 'gbk')
