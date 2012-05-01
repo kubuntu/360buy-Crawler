@@ -1,4 +1,5 @@
 #-*-coding:utf8-*-
+
 import urllib2
 import re
 from BeautifulSoup import BeautifulSoup
@@ -14,7 +15,7 @@ def __htmlpage_soup(url, coding):
 		return soup
 	html = response.read()
 	response.close()
-	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)	
+	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
 	return htmlpage_soup
 
 def products_id_maker(url_arr, coding):
@@ -27,7 +28,6 @@ def products_id_maker(url_arr, coding):
 	return products_id
 
 def get_reviews_page_num(url, coding):
-	print url
 	pagination_soup = __htmlpage_soup(url, coding)
 	pagination = pagination_soup.findAll("div", attrs={"class":"Pagination"})
 	soup2=BeautifulSoup(str(pagination))
@@ -44,7 +44,7 @@ def url_storage(products_id):
 	products_url_reviews = []
 	products_url_contents = []
 	for i in range(len(products_id)):
-		url_for_reviews_num = 'http://club.360buy.com/review/'+products_id[i]+'-1-1-0.html'
+		url_for_reviews_num = 'http://club.360buy.com/review/' + products_id[i] + '-1-1-0.html'
 		reviews_page_totalnum = get_reviews_page_num(url_for_reviews_num, 'gbk')
 		print reviews_page_totalnum
         	temp=[]
