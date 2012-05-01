@@ -1,47 +1,8 @@
 #-*-coding:utf8-*-
-
 import urllib2
 import re
 from BeautifulSoup import BeautifulSoup
-from RequestBase import RequestBase
-import re
 from Utils import *
-
-class UrlFactory(RequestBase):
-    def __init__(self, url_arr, coding):
-        self.url_array=[]
-        self.url_reviews=[]
-        for url in url_arr:
-            RequestBase.__init__(self, url, coding)
-            proIDs=self.soup.findAll('li', {'sku':True})
-            for i in proIDs:
-                self.url_array.append(str(i['sku']))
-    def get_reviews_page_num(self, url, coding):
-        pagination_soup = RequestBase.__init__(self, url, coding)
-        pagination = pagination_soup.findAll('div', 'Pagination')
-        soup2=BeautifulSoup(str(pagination))
-        at = soup2.findAll('a')
-        max_num=0
-        for i in at:
-            if re.match('[0-9]+', i.text):
-                m = int(i.text)
-                if m > max_num:
-                    max_num = m
-        print max_num
-        return max_num
-    def url_storage(self):
-        for i in range(len(self.url_array)):
-            url_for_reviews_num = 'http://club.360buy.com/review/'+self.url_array[i]+'-1-1-0.html'
-            reviews_num=self.get_reviews_page_num(url_for_reviews_num, 'utf8')
-            tmp=[]
-            for index in range(reviews_num):
-                sstr='http://club.360buy.com/review/'+self.url_array[i]+'-1'+'-'+str(index+1)+'-0'+'.html'
-                tmp.append(sstr)
-            self.url_reviews.append(tmp)
-        for i in range(len(self.url_array)):
-            sstr='http://www.360buy.com/product/'+self.url_array[i]+'.html'
-            self.url_array[i]=sstr
-        return self.url_array, self.url_reviews
 
 def __htmlpage_soup(url, coding):
 	request = urllib2.Request(url)
@@ -56,6 +17,48 @@ def __htmlpage_soup(url, coding):
 	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)	
 	return htmlpage_soup
 
+def products_id_maker(url_arr, coding):
+	products_id = []
+	for url in url_arr:
+		soup = __htmlpage_soup(url, coding)
+        ids = soup.findAll('li', {'sku':True})
+        for i in ids:
+        	products_id.append(str(i['sku']))
+	return products_id
+
+def get_reviews_page_num(url, coding):
+	print url
+	pagination_soup = __htmlpage_soup(url, coding)
+	pagination = pagination_soup.findAll("div", attrs={"class":"Pagination"})
+	soup2=BeautifulSoup(str(pagination))
+	at = soup2.findAll('a')
+	max_num = 0
+	for i in at:
+		if re.match('[0-9]+', i.text):
+			m = int(i.text)
+			if m > max_num:
+				max_num = m
+	return max_num
+
+def url_storage(products_id):
+	products_url_reviews = []
+	products_url_contents = []
+	for i in range(len(products_id)):
+		url_for_reviews_num = 'http://club.360buy.com/review/'+products_id[i]+'-1-1-0.html'
+		reviews_page_totalnum = get_reviews_page_num(url_for_reviews_num, 'gbk')
+		print reviews_page_totalnum
+        	temp=[]
+        	for index in range(reviews_page_totalnum):
+            		sstr='http://club.360buy.com/review/'+products_id[i]+'-1-'+str(index+1)+'-0'+'.html'
+            		temp.append(sstr)
+        	products_url_reviews.append((products_id[i], temp))
+	for i in range(len(products_id)):
+		sstr='http://www.360buy.com/product/'+products_id[i]+'.html'
+        products_url_contents.append(sstr)
+	return products_url_reviews, products_url_contents
+
+
+#http://www.360buy.com/allSort.aspx
 def extract_htmlpage_products(url, coding):
 	base_url1 = "http://www.360buy.com/"
 	base_url2 = "http://www.360buy.com"
@@ -86,10 +89,13 @@ def extract_htmlpage_products(url, coding):
 def extract_products_pagenum(url, coding):
 	htmlpage_soup = __htmlpage_soup(url, coding)
 	block = htmlpage_soup.find("div", attrs={"class":"pagin fr"})
-	num = extract_maxnum_from_htmlline(str(block))
-	print num
-	
+	maxnum = extract_maxnum_from_htmlline(str(block))
+	return maxnum
 
 if __name__ == '__main__':
-	url_arr=["http://www.360buy.com/products/737-794-965.html"]
-	num = extract_products_pagenum(url_arr[0], 'gbk')
+	url_arr=["http://www.360buy.com/products/737-738-1052.html"]
+	products_id = products_id_maker(url_arr, 'gbk')
+	products_url_reviews, products_url_contents = url_storage(products_id)
+	for i in products_url_reviews:
+		print i
+
