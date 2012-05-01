@@ -44,3 +44,4 @@ def split_htmlline2parts(htmlline, split_symbol):
 if __name__ == '__main__':
 	num = extract_maxnum_from_htmlline('<span class="prev-disabled">上一页<b></b></span><a href="737-738-806-0-0-0-0-0-0-0-1-1-1.html" class="current">1</a><a href="737-738-806-0-0-0-0-0-0-0-1-1-2.html">2</a><a href="737-738-806-0-0-0-0-0-0-0-1-1-3.html">3</a><span class="text">…</span><a href="737-738-806-0-0-0-0-0-0-0-1-1-17.html">17</a><a href="737-738-806-0-0-0-0-0-0-0-1-1-2.html" class="next">下一页<b></b></a>')
 	print num
+
