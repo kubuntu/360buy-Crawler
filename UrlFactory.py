@@ -1,25 +1,13 @@
 #-*-coding:utf8-*-
 
-import urllib2
 from BeautifulSoup import BeautifulSoup
-from Utils import *
-
-def __htmlpage_soup(url, coding):
-	request = urllib2.Request(url)
-	try:
-		response = urllib2.urlopen(request, timeout=15)
-	except urllib2.URLError:
-		return
-	html = response.read()
-	response.close()
-	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
-	return htmlpage_soup
+import Utils
 
 #从页面中获取商品的id号
 def products_id_maker(url_arr, coding): 
 	products_id = []
 	for url in url_arr:
-		soup = __htmlpage_soup(url, coding)
+		soup = Utils.__htmlpage_soup(url, coding)
         ids = soup.findAll('li', {'sku':True})
         for i in ids:
         	products_id.append(str(i['sku']))
@@ -27,7 +15,7 @@ def products_id_maker(url_arr, coding):
 
 #获取评论页面数
 def get_reviews_page_num(url, coding):
-	pagination_soup = __htmlpage_soup(url, coding)
+	pagination_soup = Utils.__htmlpage_soup(url, coding)
 	if not pagination_soup:
 		return
 	pagination = pagination_soup.findAll("div", attrs={"class":"Pagination"})
@@ -67,7 +55,7 @@ def extract_htmlpage_products(url, coding):
 	url_file = open("url", "w")
 	base_url1 = "http://www.360buy.com/"
 	base_url2 = "http://www.360buy.com"
-	htmlpage_soup = __htmlpage_soup(url, coding)
+	htmlpage_soup = Utils.__htmlpage_soup(url, coding)
 	blocks = htmlpage_soup.findAll("div", attrs={"class":"mt"})
 	if not blocks:
 		return (None, None)
@@ -75,16 +63,16 @@ def extract_htmlpage_products(url, coding):
 	products_top_catalog_href = [] #一级目录
 	products_sub_catalog_href = [] #二级目录
 	for block in blocks:
-		catalog = extract_text_from_htmlline(str(block)).strip()
-		href = extract_href_from_htmlline(str(block)).strip()
+		catalog = Utils.extract_text_from_htmlline(str(block)).strip()
+		href = Utils.extract_href_from_htmlline(str(block)).strip()
 		products_top_catalog_href.append((catalog, href))
 	for block_sub in blocks_sub:
-		parts = split_htmlline2parts(str(block_sub).strip(), "</em>")
+		parts = Utils.split_htmlline2parts(str(block_sub).strip(), "</em>")
 		for part in parts:
-			catalog_sub = extract_text_from_htmlline(str(part)).strip()
+			catalog_sub = Utils.extract_text_from_htmlline(str(part)).strip()
 			if len(catalog_sub) == 0:
 				continue
-			href_sub = extract_href_from_htmlline(str(part)).strip()
+			href_sub = Utils.extract_href_from_htmlline(str(part)).strip()
 			if href_sub.find("http://") == -1:
 				if href_sub[0] == '/':
 					href_sub = base_url2 + href_sub
@@ -98,11 +86,11 @@ def extract_htmlpage_products(url, coding):
 
 #生成产品的最大页面数
 def extract_products_pagenum(url, coding):
-	htmlpage_soup = __htmlpage_soup(url, coding)
+	htmlpage_soup = Utils.__htmlpage_soup(url, coding)
 	if not htmlpage_soup:
 		return
 	block = htmlpage_soup.find("div", attrs={"class":"pagin fr"})
-	maxnum = extract_maxnum_from_htmlline(str(block))
+	maxnum = Utils.extract_maxnum_from_htmlline(str(block))
 	return maxnum
 
 #生成产品的真实链接
