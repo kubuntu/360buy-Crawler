@@ -1,6 +1,30 @@
 #-*-coding=utf8-*-
-import re
+import urllib2
+from BeautifulSoup import BeautifulSoup
 
+#将页面转换为BeautifulSoup的形式
+def __htmlpage_soup(url, coding):
+	request = urllib2.Request(url)
+	try:
+		response = urllib2.urlopen(request, timeout=15)
+	except urllib2.URLError:
+		return
+	html = response.read()
+	response.close()
+	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
+	return htmlpage_soup
+
+def is_book_page(url, coding):
+	soup = __htmlpage_soup(url, coding)
+	if not soup:
+		return
+	title = soup.find("title").text
+	if title.encode("utf8").find("京东图书") != -1:
+		return True
+	else:
+		return False
+
+#从htmlline中提取文字
 def extract_text_from_htmlline(htmlline):
 	stack = []
 	for i in unicode(htmlline, 'utf8'):
@@ -14,12 +38,11 @@ def extract_text_from_htmlline(htmlline):
 		sstr += i
 	return sstr
 
+#从htmlline中提取第一个链接
 def extract_href_from_htmlline(htmlline):
-	href = re.search('href="(.*)"', htmlline)	
-	if not href:
-		return ""
-	return href.group(1)
+	return extract_mutil_href_from_htmlline(htmlline)[0]
 
+#从htmlline中提取多个链接
 def extract_mutil_href_from_htmlline(htmlline):
 	hrefs = []
 	length = len(htmlline)
@@ -30,41 +53,6 @@ def extract_mutil_href_from_htmlline(htmlline):
 					hrefs.append(htmlline[i+6:j])
 					i = j - 1
 					break
-	return hrefs
-
-def products_real_url(htmls, maxnum):
-	if len(htmls) == 1:
-		return
-	numbers1 = htmls[0][0:-5].split("-")
-	numbers2 = htmls[1][0:-5].split("-")
-	size = len(numbers1)
-	diff_pos = -1
-	base = ""
-	hrefs = []
-	for i in range(size):
-		if numbers1[i] != numbers2[i]:
-			diff_pos = i
-			break
-	
-	for i in range(size):
-		if i == diff_pos:
-			for j in range(1, maxnum+1):
-				tmp = base + str(j) + '-'
-				hrefs.append(tmp)
-		else:
-			base += numbers1[i]
-			base += '-'
-	leave = ""
-	for i in range(diff_pos+1, size):
-		leave += numbers1[i]
-		leave += '-'
-	if leave and leave[-1] == '-':
-		leave = leave[0:-1]
-	leave += ".html"
-	for j in range(maxnum):
-		if leave == '.html':
-			hrefs[j] += leave
-		hrefs[j] += leave
 	return hrefs
 
 def extract_maxnum_from_htmlline(htmlline):
@@ -90,6 +78,5 @@ def split_htmlline2parts(htmlline, split_symbol):
 	return parts
 
 if __name__ == '__main__':
-	href = extract_href_from_htmlline('<span class="prev-disabled">上一页<b></b></span><a href="737-738-806-0-0-0-0-0-0-0-1-1-1.html" class="current">1</a><a href="737-738-806-0-0-0-0-0-0-0-1-1-2.html">2</a><a href="737-738-806-0-0-0-0-0-0-0-1-1-3.html">3</a><span class="text">…</span><a href="737-738-806-0-0-0-0-0-0-0-1-1-17.html">17</a><a href="737-738-806-0-0-0-0-0-0-0-1-1-2.html" class="next">下一页<b></b></a>')
-	print href
-
+	ret = is_book_page("http://www.360buy.com/products/1713-3293-000.html", "gbk")
+	print ret
