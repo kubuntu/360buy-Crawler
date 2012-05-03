@@ -8,18 +8,37 @@ def __htmlpage_soup(url, coding):
 	try:
 		response = urllib2.urlopen(request, timeout=15)
 	except urllib2.URLError:
-		return
+		print "connect error!"
+		return -1
 	html = response.read()
 	response.close()
 	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
 	return htmlpage_soup
 
+def split_by_space(sstr):
+	two_part = []
+	j = 0
+	for i in sstr:
+		if i == " ":
+			two_part.append(sstr[0:j].strip())
+			two_part.append(sstr[j+1:].strip())
+		j += 1
+	return two_part
+
 def is_book_page(url, coding):
-	soup = __htmlpage_soup(url, coding)
-	if not soup:
-		return
-	title = soup.find("title").text
-	if title.encode("utf8").find("京东图书") != -1:
+	try:
+		soup = __htmlpage_soup(url, coding)
+	except UnicodeEncodeError:
+		print "UnicodeEncodeError!"
+		return -1
+	if soup == -1:
+		return -1
+	find_result = soup.find("title")
+	if not find_result:
+		return -1
+	else:
+		find_result = find_result.text
+	if find_result.encode("utf8").find("京东图书") != -1:
 		return True
 	else:
 		return False

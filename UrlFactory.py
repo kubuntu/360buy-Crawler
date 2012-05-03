@@ -1,4 +1,4 @@
-#-*-coding:utf8-*-
+#-*-coding:utf-8-*-
 
 from BeautifulSoup import BeautifulSoup
 import Utils
@@ -87,11 +87,12 @@ def extract_htmlpage_products(url, coding):
 #生成产品的最大页面数
 def extract_products_pagenum(url, coding):
 	htmlpage_soup = Utils.__htmlpage_soup(url, coding)
-	if not htmlpage_soup:
-		return
+	if htmlpage_soup == -1:
+		return -1, -1
 	block = htmlpage_soup.find("div", attrs={"class":"pagin fr"})
 	maxnum = Utils.extract_maxnum_from_htmlline(str(block))
-	return maxnum
+	href_base = extract_mutil_href_from_htmlline(str(block))
+	return maxnum, href_base
 
 #生成产品的真实链接
 def products_real_url(htmls, maxnum):
@@ -131,5 +132,9 @@ def products_real_url(htmls, maxnum):
 
 if __name__ == '__main__':
 	url = "http://www.360buy.com/allSort.aspx"
-	extract_htmlpage_products(url, 'gbk')
-
+	products_top_catalog_href, products_sub_catalog_href = extract_htmlpage_products(url, 'gbk')
+	if not products_top_catalog_href and not products_sub_catalog_href:
+		print "链接错误..."
+	else:
+		for i in products_sub_catalog_href:
+			print i
