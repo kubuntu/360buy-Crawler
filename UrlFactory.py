@@ -4,13 +4,16 @@ from BeautifulSoup import BeautifulSoup
 import Utils
 
 #从页面中获取商品的id号
-def products_id_maker(url_arr, coding): 
+def products_id_maker(url, coding): 
+	if not url:
+		return -1
 	products_id = []
-	for url in url_arr:
-		soup = Utils.__htmlpage_soup(url, coding)
-        ids = soup.findAll('li', {'sku':True})
-        for i in ids:
-        	products_id.append(str(i['sku']))
+	soup = Utils.__htmlpage_soup(url, coding)
+	if soup == -1:
+		return -1
+	ids = soup.findAll('li', {'sku':True})
+	for i in ids:
+		products_id.append(str(i['sku']))
 	return products_id
 
 #获取评论页面数
@@ -90,15 +93,18 @@ def extract_products_pagenum(url, coding):
 	if htmlpage_soup == -1:
 		return -1, -1
 	block = htmlpage_soup.find("div", attrs={"class":"pagin fr"})
+	if not block:
+		return -1, -1
 	maxnum = Utils.extract_maxnum_from_htmlline(str(block))
-	href_base = extract_mutil_href_from_htmlline(str(block))
+	href_base = Utils.extract_mutil_href_from_htmlline(str(block))
 	return maxnum, href_base
 
 #生成产品的真实链接
 def products_real_url(htmls, maxnum):
+	base_url = "http://www.360buy.com/products/"
 	if len(htmls) == 1:
 		return
-	numbers1 = htmls[0][0:-5].split("-")	
+	numbers1 = htmls[0][0:-5].split("-")
 	numbers2 = htmls[1][0:-5].split("-")
 	size = len(numbers1)
 	diff_pos = -1
@@ -128,6 +134,7 @@ def products_real_url(htmls, maxnum):
 		if leave == '.html':
 			hrefs[j] = hrefs[j][0:-1]
 		hrefs[j] += leave
+		hrefs[j] = base_url + hrefs[j]
 	return hrefs
 
 if __name__ == '__main__':

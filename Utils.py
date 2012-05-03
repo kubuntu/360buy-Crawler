@@ -1,14 +1,25 @@
 #-*-coding=utf8-*-
 import urllib2
 from BeautifulSoup import BeautifulSoup
+import socket
+from threading import Timer
 
 #将页面转换为BeautifulSoup的形式
+class TimerOut:
+	pass
+
+def __throw_timeout_error():
+	print "Timeout!"
+	raise TimeOut()
+
 def __htmlpage_soup(url, coding):
 	request = urllib2.Request(url)
+	t = Timer(15.0, __throw_timeout_error)
 	try:
-		response = urllib2.urlopen(request, timeout=15)
-	except urllib2.URLError:
-		print "connect error!"
+		response = urllib2.urlopen(request)
+		t.cancel()
+	except:
+		#print "connect error!"
 		return -1
 	html = response.read()
 	response.close()
@@ -24,6 +35,17 @@ def split_by_space(sstr):
 			two_part.append(sstr[j+1:].strip())
 		j += 1
 	return two_part
+
+def split_by_multi_space(sstr, part):
+	j = 0
+	for i in sstr:
+		if i == " ":
+			part.append(sstr[0:j].strip())
+			split_by_multi_space(sstr[j+1:].strip(), part)
+			break
+		j += 1
+	if j == len(sstr):
+		part.append(sstr)
 
 def is_book_page(url, coding):
 	try:
@@ -89,6 +111,8 @@ def extract_maxnum_from_htmlline(htmlline):
 		if buf != '' and flag:
 		 	num_list.append(int(buf))
 		 	buf = ''
+	if len(num_list) == 0:
+		return -1
 	return max(num_list)
 
 
