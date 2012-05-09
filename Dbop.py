@@ -48,5 +48,5 @@ def db_list(list_sentence):
 
 if __name__ == "__main__":
 #    db_create('create table v(product_id integer primary key,title text)')
-    db_insert('insert into v(product_id, title) values(1, "zjf")')
+    db_insert('insert into v(product_id, title) values(1, "ddd")')
     db_list('select * from v')
