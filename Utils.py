@@ -1,4 +1,4 @@
-#-*-coding=utf8-*-
+#-*- coding:utf-8 -*-
 import urllib2
 from BeautifulSoup import BeautifulSoup
 import socket
@@ -8,20 +8,31 @@ from threading import Timer
 class TimerOut:
 	pass
 
+def str2int(sstr):
+	j = 0
+	for i in sstr:
+		if i.isdigit():
+			break
+		j += 1
+	if j == len(sstr):
+		return 0
+	return int(sstr[j:])
+
 def __throw_timeout_error():
 	print "Timeout!"
 	raise TimeOut()
 
 def __htmlpage_soup(url, coding):
 	request = urllib2.Request(url)
-	t = Timer(15.0, __throw_timeout_error)
+	response = urllib2.urlopen(request)
+	t = Timer(30.0, __throw_timeout_error)
 	try:
-		response = urllib2.urlopen(request)
+		html = response.read()
 		t.cancel()
 	except:
-		#print "connect error!"
+		print "connect error!"
+		t.cancel()
 		return -1
-	html = response.read()
 	response.close()
 	htmlpage_soup = BeautifulSoup(''.join(html), fromEncoding=coding)
 	return htmlpage_soup
@@ -38,14 +49,16 @@ def split_by_space(sstr):
 
 def split_by_multi_space(sstr, part):
 	j = 0
-	for i in sstr:
-		if i == " ":
-			part.append(sstr[0:j].strip())
-			split_by_multi_space(sstr[j+1:].strip(), part)
-			break
-		j += 1
-	if j == len(sstr):
-		part.append(sstr)
+	i = 0
+	while i < len(sstr):
+		if sstr[i] == ' ':
+			part.append(sstr[j:i])
+			j = i
+			while j < len(sstr) and sstr[j] == ' ':
+				j += 1
+			i = j
+		i += 1
+	part.append(sstr[j:i])
 
 def is_book_page(url, coding):
 	try:

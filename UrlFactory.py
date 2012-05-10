@@ -2,6 +2,7 @@
 
 from BeautifulSoup import BeautifulSoup
 import Utils
+import re
 
 #从页面中获取商品的id号
 def products_id_maker(url, coding): 
@@ -19,17 +20,16 @@ def products_id_maker(url, coding):
 #获取评论页面数
 def get_reviews_page_num(url, coding):
 	pagination_soup = Utils.__htmlpage_soup(url, coding)
-	if not pagination_soup:
-		return
+	if pagination_soup == -1:
+		return -1
 	pagination = pagination_soup.findAll("div", attrs={"class":"Pagination"})
 	soup2=BeautifulSoup(str(pagination))
 	at = soup2.findAll('a')
 	max_num = 0
 	for i in at:
-		if re.match('[0-9]+', i.text):
-			m = int(i.text)
-			if m > max_num:
-				max_num = m
+		m = int(Utils.str2int(i.text))
+		if m > max_num:
+			max_num = m
 	return max_num
 
 #生成评论页面链接，和产品参数页面链接
@@ -39,17 +39,18 @@ def url_storage(products_id):
 	for i in range(len(products_id)):
 		url_for_reviews_num = 'http://club.360buy.com/review/' + products_id[i] + '-1-1-0.html'
 		reviews_page_totalnum = get_reviews_page_num(url_for_reviews_num, 'gbk')
-		if not reviews_page_totalnum:
+		#对于评论数为0的产品来说，系统不作推荐
+		if reviews_page_totalnum == -1 or reviews_page_totalnum == 0:
 			continue
-		print reviews_page_totalnum
-        	temp=[]
+        	reviews_url = []
         	for index in range(reviews_page_totalnum):
             		sstr='http://club.360buy.com/review/'+products_id[i]+'-1-'+str(index+1)+'-0'+'.html'
-            		temp.append(sstr)
-        	products_url_reviews.append((products_id[i], temp))
-	for i in range(len(products_id)):
+            		reviews_url.append(sstr)
+		print len(reviews_url)
+        	products_url_reviews.append((products_id[i], reviews_url))
 		sstr='http://www.360buy.com/product/'+products_id[i]+'.html'
-        products_url_contents.append(sstr)
+		products_url_contents.append((products_id[i], sstr))
+	print "return"
 	return products_url_reviews, products_url_contents
 
 #http://www.360buy.com/allSort.aspx

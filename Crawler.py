@@ -62,6 +62,7 @@ def step4_save():
         hrefs = products_real_url([part[3], part[2]], int(part[1]))
         name_href_hash[part[0]] = hrefs
     file_real_url.close()
+    print "step4 is over!"
     return name_href_hash
 
 def step4(products_name, products_href):
@@ -86,34 +87,63 @@ def step4(products_name, products_href):
     return name_href_hash
 
 #获取商品的id号
-def step5(name_href_hash):
+def step5_save():
     name_id_hash = {}
+    file_ids = open("file_ids", "r")
+    for line in file_ids:
+        part = []
+        split_by_multi_space(line.strip(), part)
+        product_name = part[0]
+        part = part[1:]
+        name_id_hash[product_name] = part
+    file_ids.close()
+    print "step5 is over!"
+    return name_id_hash
+
+def step5(name_href_hash):
+    if os.path.isfile("file_ids"):
+        return step5_save()
+    name_id_hash = {}
+    file_ids = open("file_ids", "w")
     for item in name_href_hash.items():
         ids = []
+        print >> file_ids, item[0]," ",
         for href in item[1]:
             try:
                 products_id = products_id_maker(href, 'gbk')
                 print products_id
                 if products_id == -1:
                     continue
+                for i in products_id:
+                    print >> file_ids, i, " ",
             except UnicodeEncodeError:
                 continue
             ids.append(products_id)
+        print >> file_ids, "\n", 
         name_id_hash[item[0]] = ids
+    file_ids.close()
     return name_id_hash
             
 #生成评论页面链接和产品参数页面链接
 def step6(name_id_hash):
+    file_ids_filter = open("file_ids_filter", "w")
     name_reviews_contents_hash = {}
     for item in name_id_hash.items():
         products_url_reviews, products_url_contents = url_storage(item[1])
+        print >> file_ids_filter, item[0], " ",
+        for id in products_url_reviews:
+            print >> file_ids_filter, id[0], ":", len(id[1]), " ", 
+        print >> file_ids_filter, "\n"
         name_reviews_contents_hash[item[0]] = [products_url_reviews, products_url_contents]
+        file_ids_filter.flush()
+    file_ids_filter.close()
     return name_reviews_contents_hash
         
 def main():
     products_name, products_href = step3()
     name_href_hash = step4(products_name, products_href)
     name_id_hash = step5(name_href_hash)
+    name_reviews_contents_hash = step6(name_id_hash)
 
 if __name__ == "__main__":
     main()
