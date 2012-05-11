@@ -24,9 +24,9 @@ def __throw_timeout_error():
 
 def __htmlpage_soup(url, coding):
 	request = urllib2.Request(url)
-	response = urllib2.urlopen(request)
-	t = Timer(30.0, __throw_timeout_error)
 	try:
+		t = Timer(30.0, __throw_timeout_error)
+		response = urllib2.urlopen(request)
 		html = response.read()
 		t.cancel()
 	except:

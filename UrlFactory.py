@@ -27,7 +27,10 @@ def get_reviews_page_num(url, coding):
 	at = soup2.findAll('a')
 	max_num = 0
 	for i in at:
-		m = int(Utils.str2int(i.text))
+		try:
+			m = Utils.str2int(i.text)
+		except:
+			continue
 		if m > max_num:
 			max_num = m
 	return max_num
@@ -46,11 +49,9 @@ def url_storage(products_id):
         	for index in range(reviews_page_totalnum):
             		sstr='http://club.360buy.com/review/'+products_id[i]+'-1-'+str(index+1)+'-0'+'.html'
             		reviews_url.append(sstr)
-		print len(reviews_url)
         	products_url_reviews.append((products_id[i], reviews_url))
 		sstr='http://www.360buy.com/product/'+products_id[i]+'.html'
 		products_url_contents.append((products_id[i], sstr))
-	print "return"
 	return products_url_reviews, products_url_contents
 
 #http://www.360buy.com/allSort.aspx

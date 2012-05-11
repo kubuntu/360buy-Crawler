@@ -2,6 +2,9 @@
 from UrlFactory import *
 from Utils import *
 import os
+import threading
+from threading import Thread, Lock
+from Queue import Queue
 
 def step1():
     url = "http://www.360buy.com/allSort.aspx"
@@ -138,12 +141,42 @@ def step6(name_id_hash):
         file_ids_filter.flush()
     file_ids_filter.close()
     return name_reviews_contents_hash
+
+q = Queue()
+file_mutex = Lock()
+name_reviews_contents_hash = {}
+
+def step6_mutil_thread():
+    while True:
+        item = q.get()
+        print item[0]
+        products_url_reviews, products_url_contents = url_storage(item[1])
+        file_mutex.acquire()
+        file_ids_filter = open("file_ids_filter", "a")
+        print >> file_ids_filter, item[0], " ",
+        for id in products_url_reviews:
+            print >> file_ids_filter, id[0], ":", len(id[1]), " ",
+        print >> file_ids_filter, "\n"
+        name_reviews_contents_hash[item[0]] = [products_url_reviews, products_url_contents]
+        file_ids_filter.flush()
+        file_ids_filter.close()
+        file_mutex.release()
+        q.task_done()
         
 def main():
     products_name, products_href = step3()
     name_href_hash = step4(products_name, products_href)
     name_id_hash = step5(name_href_hash)
-    name_reviews_contents_hash = step6(name_id_hash)
+    num_threads = 5 #线程数量
+    for i in range(num_threads):
+        t = Thread(target = step6_mutil_thread)
+        t.daemon = True
+        t.start()
+        print "threading", i, "is start"
+    for item in name_id_hash.items():
+        q.put(item)
+    q.join()
+    #name_reviews_contents_hash = step6(name_id_hash)
 
 if __name__ == "__main__":
     main()
